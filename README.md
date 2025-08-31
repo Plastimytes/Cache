@@ -1,5 +1,9 @@
 Money Management
 
-Budgeting and planning
+Income over given periods and detailed listings of the transactions made
 
-Progress tracking using Graphs
+Progress tracking, planning  
+
+forecasting using Graphs on the Analytics page
+
+More to be discussed
