@@ -1,1 +1,2 @@
-console.log("Opening for the Cache App");
+let transactions = [];
+let 

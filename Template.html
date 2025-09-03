@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Money Manager App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container { max-width: 300px; margin: 0 auto; }
+        .hidden { display: none; }
+        body { font-family: 'Arial', sans-serif; }
+        .progress-bar { height: 10px; background: #ddd; border-radius: 5px; }
+        .progress-fill { height: 100%; background: linear-gradient(to right, #4ade80, #22c55e); border-radius: 5px; transition: width 0.5s; }
+        .transaction-card { border-left: 4px solid #10b981; /* green for deposits */ }
+        .expense-card { border-left: 4px solid #ef4444; /* red for expenses */ }
+        .dark-mode { background: #1a202c; color: #e2e8f0; }
+        .dark-mode .card { background: #2d3748; }
+        .dark-mode .header { background: #2d1b69; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-blue-600 text-white p-4 shadow-lg header">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Money Manager</h1>
+            <nav>
+                <button class="nav-btn px-4 py-2 rounded mr-2" data-page="dashboard">Dashboard</button>
+                <button class="nav-btn px-4 py-2 rounded mr-2" data-page="income-transactions">Income & Transactions</button>
+                <button class="nav-btn px-4 py-2 rounded mr-2" data-page="tracking-planning">Tracking & Planning</button>
+                <button class="nav-btn px-4 py-2 rounded" data-page="settings">Settings</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-6">
+        <!-- Dashboard Page -->
+        <section id="dashboard" class="page hidden">
+            <h2 class="text-3xl font-semibold mb-6">Dashboard Overview</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium mb-2">Total Balance</h3>
+                    <p class="text-2xl font-bold text-green-600" id="totalBalance">$0.00</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium mb-2">Monthly Income</h3>
+                    <p class="text-2xl font-bold text-blue-600" id="monthlyIncome">$0.00</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium mb-2">Monthly Expenses</h3>
+                    <p class="text-2xl font-bold text-red-600" id="monthlyExpenses">$0.00</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium mb-4">Expense Breakdown</h3>
+                    <canvas id="expenseChart" class="chart-container"></canvas>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium mb-4">Recent Transactions</h3>
+                    <ul id="recentTransactions" class="space-y-2">
+                        <!-- Recent transactions here -->
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-8 text-center">
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/45aa1234-3645-4961-b2bd-cdc116f3f088.png" alt="Detailed financial dashboard with line graphs showing income trends, expense bars by category, budget progress circles in green and red hues, detailed charts with labels and numbers for a professional financial app interface" class="mx-auto rounded-lg shadow" />
+            </div>
+        </section>
+
+        <!-- Income & Transactions Page -->
+        <section id="income-transactions" class="page hidden">
+            <h2 class="text-3xl font-semibold mb-6">Income & Transactions</h2>
+            <div class="flex justify-between mb-6">
+                <form id="transactionForm" class="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1 mr-4">
+                    <select id="transactionType" class="p-2 border rounded">
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                    <input type="text" id="transactionDescription" placeholder="Description" class="p-2 border rounded" required>
+                    <input type="number" id="transactionAmount" placeholder="Amount" class="p-2 border rounded" step="0.01" required>
+                    <select id="transactionCategory" class="p-2 border rounded">
+                        <option value="food">Food</option>
+                        <option value="transport">Transport</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="salary">Salary</option>
+                        <option value="other">Other</option>
+                    </select>
+                </form>
+                <button id="addTransaction" class="bg-blue-500 text-white px-4 py-2 rounded">Add Transaction</button>
+            </div>
+            <div class="mb-6">
+                <label for="filterCategory" class="block mb-2">Filter by Category:</label>
+                <select id="filterCategory" class="p-2 border rounded mr-4">
+                    <option value="">All</option>
+                    <option value="food">Food</option>
+                    <option value="transport">Transport</option>
+                    <option value="entertainment">Entertainment</option>
+                    <option value="salary">Salary</option>
+                    <option value="other">Other</option>
+                </select>
+                <input type="date" id="filterDate" class="p-2 border rounded">
+                <button id="applyFilter" class="ml-2 bg-green-500 text-white px-4 py-2 rounded">Apply Filter</button>
+            </div>
+            <div class="card bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-medium mb-4">Transaction History</h3>
+                <ul id="transactionList" class="space-y-4 max-h-96 overflow-y-auto">
+                    <!-- Transactions list here -->
+                </ul>
+            </div>
+        </section>
+
+        <!-- Tracking & Planning Page -->
+        <section id="tracking-planning" class="page hidden">
+            <h2 class="text-3xl font-semibold mb-6">Tracking & Planning</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="card bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium mb-4">Budget Categories</h3>
+                    <div id="budgetList" class="space-y-4">
+                        <!-- Budget items here -->
+                    </div>
+                    <div class="mt-4">
+                        <input type="text" id="budgetCategory" placeholder="Category" class="p-2 border rounded mr-2">
+                        <input type="number" id="budgetAmount" placeholder="Budget Amount" class="p-2 border rounded mr-2" step="0.01">
+                        <button id="addBudget" class="bg-blue-500 text-white px-4 py-2 rounded">Add Budget</button>
+                    </div>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-lg font-medium mb-4">Savings Goals</h3>
+                    <div id="goalList" class="space-y-4">
+                        <!-- Goals here -->
+                    </div>
+                    <div class="mt-4">
+                        <input type="text" id="goalName" placeholder="Goal Name" class="p-2 border rounded mr-2">
+                        <input type="number" id="goalTarget" placeholder="Target Amount" class="p-2 border rounded mr-2" step="0.01">
+                        <button id="addGoal" class="bg-green-500 text-white px-4 py-2 rounded">Add Goal</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-medium mb-4">Financial Planning Tips</h3>
+                <p class="text-gray-600">Track your progress and plan for the future. Review your budgets weekly and adjust goals as needed.</p>
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/c9683b05-0077-4091-a3ab-2dd922f6c29d.png" alt="Illustrative financial planning chart with pie sections for savings, investments, budgets, color-coded arrows pointing to growth areas, detailed with percentage labels and infographic style for a money management app" class="mt-4 rounded-lg" />
+            </div>
+        </section>
+
+        <!-- Settings Page -->
+        <section id="settings" class="page hidden">
+            <h2 class="text-3xl font-semibold mb-6">Settings</h2>
+            <div class="card bg-white p-6 rounded-lg shadow mb-6">
+                <h3 class="text-lg font-medium mb-4">Profile Settings</h3>
+                <label for="userName" class="block mb-2">Name:</label>
+                <input type="text" id="userName" class="w-full p-2 border rounded mb-4">
+                <label for="userEmail" class="block mb-2">Email:</label>
+                <input type="email" id="userEmail" class="w-full p-2 border rounded mb-4">
+                <button id="saveProfile" class="bg-blue-500 text-white px-4 py-2 rounded">Save Profile</button>
+            </div>
+            <div class="card bg-white p-6 rounded-lg shadow mb-6">
+                <h3 class="text-lg font-medium mb-4">Application Settings</h3>
+                <div class="flex items-center mb-4">
+                    <input type="checkbox" id="darkMode" class="mr-2">
+                    <label for="darkMode">Enable Dark Mode</label>
+                </div>
+                <div class="flex items-center mb-4">
+                    <input type="checkbox" id="notifications" class="mr-2">
+                    <label for="notifications">Enable Notifications for Budget Alerts</label>
+                </div>
+                <button id="saveSettings" class="bg-blue-500 text-white px-4 py-2 rounded">Save Settings</button>
+            </div>
+            <div class="card bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-medium mb-4">Export Data</h3>
+                <p class="text-gray-600 mb-4">Download your financial data as CSV for external analysis.</p>
+                <button id="exportData" class="bg-green-500 text-white px-4 py-2 rounded">Export Transactions</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white p-4 mt-12">
+        <div class="container mx-auto text-center">
+            <p>© 2023 Money Manager App. Built with HTML, CSS, and JavaScript.</p>
+        </div>
+    </footer>
+
+    <script>
+        // State management
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let budgets = JSON.parse(localStorage.getItem('budgets')) || [];
+        let goals = JSON.parse(localStorage.getItem('goals')) || [];
+        let profile = JSON.parse(localStorage.getItem('profile')) || { name: '', email: '' };
+        let settings = JSON.parse(localStorage.getItem('settings')) || { darkMode: false, notifications: false };
+
+        // Page navigation
+        const navButtons = document.querySelectorAll('.nav-btn');
+        navButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                navButtons.forEach(b => b.classList.remove('bg-blue-700'));
+                btn.classList.add('bg-blue-700');
+                document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+                document.getElementById(btn.dataset.page).classList.remove('hidden');
+                updateDashboard();
+            });
+        });
+
+        // Dashboard functions
+        function updateDashboard() {
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            let totalBalance = 0;
+            let monthlyIncome = 0;
+            let monthlyExpenses = 0;
+            const categoryExpenses = {};
+
+            transactions.forEach(t => {
+                const tDate = new Date(t.date);
+                if (tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear) {
+                    if (t.type === 'income') {
+                        monthlyIncome += t.amount;
+                        totalBalance += t.amount;
+                    } else {
+                        monthlyExpenses += t.amount;
+                        totalBalance -= t.amount;
+                        categoryExpenses[t.category] = (categoryExpenses[t.category] || 0) + t.amount;
+                    }
+                } else if (t.type === 'income') totalBalance += t.amount;
+                else totalBalance -= t.amount;
+            });
+
+            document.getElementById('totalBalance').textContent = `$${totalBalance.toFixed(2)}`;
+            document.getElementById('monthlyIncome').textContent = `$${monthlyIncome.toFixed(2)}`;
+            document.getElementById('monthlyExpenses').textContent = `$${monthlyExpenses.toFixed(2)}`;
+
+            // Recent transactions (last 5)
+            const recentList = document.getElementById('recentTransactions');
+            recentList.innerHTML = '';
+            transactions.slice(-5).reverse().forEach(t => {
+                const li = document.createElement('li');
+                li.className = `p-2 rounded ${t.type === 'income' ? 'transaction-card' : 'expense-card'}`;
+                li.innerHTML = `<strong>${t.description}</strong> - $${t.amount.toFixed(2)} (${t.category})`;
+                recentList.appendChild(li);
+            });
+
+            // Expense chart
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            const chartData = Object.entries(categoryExpenses).map(([cat, amt]) => ({ label: cat, data: amt }));
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.map(d => d.label),
+                    datasets: [{
+                        data: chartData.map(d => d.data),
+                        backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Transaction functions
+        function renderTransactions(filterCat = '', filterDate = '') {
+            const list = document.getElementById('transactionList');
+            list.innerHTML = '';
+            transactions.filter(t => (!filterCat || t.category === filterCat) && (!filterDate || t.date.startsWith(filterDate)))
+                .reverse()
+                .forEach((t, index) => {
+                    const li = document.createElement('li');
+                    li.className = `p-4 rounded-lg ${t.type === 'income' ? 'transaction-card bg-green-50' : 'expense-card bg-red-50'}`;
+                    li.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <strong>${t.description}</strong> - $${t.amount.toFixed(2)} (${t.category})
+                                <p class="text-sm text-gray-500">${new Date(t.date).toLocaleDateString()}</p>
+                            </div>
+                            <button onclick="deleteTransaction(${index})" class="text-red-500">Delete</button>
+                        </div>
+                    `;
+                    list.appendChild(li);
+                });
+        }
+
+        document.getElementById('addTransaction').addEventListener('click', () => {
+            const type = document.getElementById('transactionType').value;
+            const desc = document.getElementById('transactionDescription').value;
+            const amt = parseFloat(document.getElementById('transactionAmount').value);
+            const cat = document.getElementById('transactionCategory').value;
+            if (desc && amt) {
+                transactions.push({ type, description: desc, amount: amt, category: cat, date: new Date().toISOString().split('T')[0] });
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+                document.getElementById('transactionForm').reset();
+                renderTransactions();
+                updateDashboard();
+            }
+        });
+
+        document.getElementById('applyFilter').addEventListener('click', () => {
+            const cat = document.getElementById('filterCategory').value;
+            const date = document.getElementById('filterDate').value;
+            renderTransactions(cat, date);
+        });
+
+        window.deleteTransaction = (index) => {
+            const realIndex = transactions.length - index - 1;
+            transactions.splice(realIndex, 1);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            renderTransactions();
+            updateDashboard();
+        };
+
+        // Budget and Goals functions
+        function renderBudgets() {
+            const list = document.getElementById('budgetList');
+            list.innerHTML = '';
+            budgets.forEach((b, index) => {
+                let spent = 0;
+                transactions.filter(t => t.type === 'expense' && t.category === b.category).forEach(t => spent += t.amount);
+                const progress = (spent / b.amount) * 100;
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <p><strong>${b.category}</strong> - Budget: $${b.amount} | Spent: $${spent.toFixed(2)}</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
+                    </div>
+                    <button onclick="updateBudget(${index}, ${spent})" class="mt-2 bg-red-500 text-white px-2 py-1 rounded text-sm">Edit</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        document.getElementById('addBudget').addEventListener('click', () => {
+            const cat = document.getElementById('budgetCategory').value;
+            const amt = parseFloat(document.getElementById('budgetAmount').value);
+            if (cat && amt) {
+                budgets.push({ category: cat, amount: amt });
+                localStorage.setItem('budgets', JSON.stringify(budgets));
+                document.getElementById('budgetCategory').value = '';
+                document.getElementById('budgetAmount').value = '';
+                renderBudgets();
+            }
+        });
+
+        function renderGoals() {
+            const list = document.getElementById('goalList');
+            list.innerHTML = '';
+            goals.forEach((g, index) => {
+                const goalBalance = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+                const progress = (goalBalance / g.target) * 100;
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <p><strong>${g.name}</strong> - Target: $${g.target} | Saved: $${goalBalance.toFixed(2)}</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
+                    </div>
+                    <button onclick="updateGoal(${index})" class="mt-2 bg-blue-500 text-white px-2 py-1 rounded text-sm">Edit</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        document.getElementById('addGoal').addEventListener('click', () => {
+            const name = document.getElementById('goalName').value;
+            const targ = parseFloat(document.getElementById('goalTarget').value);
+            if (name && targ) {
+                goals.push({ name, target: targ });
+                localStorage.setItem('goals', JSON.stringify(goals));
+                document.getElementById('goalName').value = '';
+                document.getElementById('goalTarget').value = '';
+                renderGoals();
+            }
+        });
+
+        // Settings functions
+        document.getElementById('userName').value = profile.name;
+        document.getElementById('userEmail').value = profile.email;
+        document.getElementById('darkMode').checked = settings.darkMode;
+        document.getElementById('notifications').checked = settings.notifications;
+
+        document.getElementById('saveProfile').addEventListener('click', () => {
+            profile.name = document.getElementById('userName').value;
+            profile.email = document.getElementById('userEmail').value;
+            localStorage.setItem('profile', JSON.stringify(profile));
+            alert('Profile saved!');
+        });
+
+        document.getElementById('saveSettings').addEventListener('click', () => {
+            settings.darkMode = document.getElementById('darkMode').checked;
+            settings.notifications = document.getElementById('notifications').checked;
+            localStorage.setItem('settings', JSON.stringify(settings));
+            if (settings.darkMode) document.body.classList.add('dark-mode');
+            else document.body.classList.remove('dark-mode');
+            alert('Settings saved!');
+        });
+
+        document.getElementById('exportData').addEventListener('click', () => {
+            const csv = transactions.map(t => `${t.date},${t.type},${t.description},${t.amount},${t.category}`).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'transactions.csv';
+            a.click();
+        });
+
+        // Initial loads
+        renderTransactions();
+        renderBudgets();
+        renderGoals();
+        updateDashboard();
+        document.getElementById('dashboard').classList.remove('hidden');
+        navButtons[0].classList.add('bg-blue-700');
+        if (settings.darkMode) document.body.classList.add('dark-mode');
+    </script>
+</body>
+</html>
+</content>
+</create_file>
